@@ -52,6 +52,6 @@ void Task_2() {
 int main() {
     //Task_1();
     //Task_2();
-    Qubit::Get_Matrix("table");
+    Qubit::Get_Matrix("../initial_table.txt");
     return 0;
 }

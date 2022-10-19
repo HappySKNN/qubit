@@ -124,7 +124,7 @@ void Qubit::Get_Matrix(const string &filename) {
         dense_matrix[&i - &vec[0]] = stoi(ss.str(), nullptr, 2);
     }
 
-    ofstream out("result");
+    ofstream out("../result_matrix.txt");
     for (int i = 0; i < dense_matrix.size(); ++i) {
         for (int j = 0; j < dense_matrix.size(); ++j) {
             if (dense_matrix[i] == j) {

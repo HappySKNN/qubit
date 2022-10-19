@@ -3,4 +3,4 @@ project(qubit)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(qubit main.cpp)
+add_executable(qubit main.cpp qubit.h qubit.cpp)

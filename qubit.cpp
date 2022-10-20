@@ -124,6 +124,15 @@ void Qubit::Get_Matrix(const string &filename) {
         dense_matrix[&i - &vec[0]] = stoi(ss.str(), nullptr, 2);
     }
 
+    vector<int> result_matrix = Multiply_Matrices(dense_matrix, Transpose_Matrix(dense_matrix));
+
+    for (int i = 0; i < result_matrix.size(); ++i) {
+        if (result_matrix[i] != i) {
+            cout << "Matrix is not unitary" << endl;
+            exit(3);
+        }
+    }
+
     ofstream out("../result_matrix.txt");
     for (int i = 0; i < dense_matrix.size(); ++i) {
         for (int j = 0; j < dense_matrix.size(); ++j) {
@@ -136,6 +145,8 @@ void Qubit::Get_Matrix(const string &filename) {
         out << "\n";
     }
     out.close();
+
+    cout << "Matrix was created" << endl;
 }
 
 vector<int> Qubit::Transpose_Matrix(const std::vector<int> &vec) {
@@ -148,6 +159,13 @@ vector<int> Qubit::Transpose_Matrix(const std::vector<int> &vec) {
     return result;
 }
 
-vector<int> Qubit::Multiply_Matrix(const std::vector<int> &vec) {
+vector<int> Qubit::Multiply_Matrices(const std::vector<int> &matrix_1, const std::vector<int> &matrix_2) {
 
+    vector<int> result(8);
+
+    for (int i = 0; i < matrix_1.size(); ++i) {
+        result[i] = matrix_2[matrix_1[i]];
+    }
+
+    return result;
 }

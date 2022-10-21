@@ -90,38 +90,79 @@ double Qubit::Qubit_Observe() const {
     }
 }
 
+void Qubit::Solve_Function(const int &a, const int &m) {
+    string filename = Qubit::Get_Arithmetic_Table(a, m);
+    Qubit::Get_Matrix(filename);
+}
+
+void Qubit::Solve_Function(const std::string &filename) {
+    Qubit::Get_Matrix(filename);
+}
+
 void Qubit::Get_Matrix(const string &filename) {
     ifstream in(filename);
-
     vector<vector<int>> vec;
 
-    int temp;
     for (string line; getline(in, line);) {
         istringstream iss(line);
         vector<int> vec_temp;
+        int temp;
+
+        iss >> temp;
         while (!iss.eof()) {
-            iss >> temp;
             vec_temp.push_back(temp);
+            iss >> temp;
         }
 
-        vec_temp.push_back(0);
-        vec_temp.push_back(vec_temp[vec_temp.size() - 2] ^ vec_temp[vec_temp.size() - 1]);
-        vec.push_back(vec_temp);
-
-        vec_temp[vec_temp.size() - 2] = 1;
-        vec_temp[vec_temp.size() - 1] = vec_temp[vec_temp.size() - 3] ^ vec_temp[vec_temp.size() - 2];
         vec.push_back(vec_temp);
     }
 
-    vector<int> dense_matrix(8);
+    int f_count = static_cast<int>((vec[0].size() + 1) / 2);
+    int x_count = f_count;
+    int lines_count = static_cast<int>(pow(pow(2, f_count), 2));
+    vector<vector<int>> vec_table(lines_count, vector<int>(f_count * 4));
 
-    for (auto &i: vec) {
-        stringstream ss;
-        for (int j = 0; j < i.size() - 3; ++j) {
-            ss << i[j];
+    if (vec[0].size() % 2) {
+        lines_count /= 2;
+        vec_table.resize(lines_count, vector<int>(f_count * 4 - 3));
+        f_count /= 2;
+    }
+
+    for (int i = 0; i < lines_count; ++i) {
+        for (int j = 0; j < x_count; ++j) {
+            vec_table[i][j] = vec[i / pow(2, f_count)][j];
         }
-        ss << i[i.size() - 1];
-        dense_matrix[&i - &vec[0]] = stoi(ss.str(), nullptr, 2);
+
+        for (int j = 0; j < f_count; ++j) {
+            vec_table[i][x_count + j] = vec[i / pow(2, f_count)][x_count + j];
+        }
+
+        int temp = i % (int) pow(2, f_count);
+        for (int j = 0; j < f_count; ++j) {
+            vec_table[i][x_count + f_count * 2 - j - 1] = temp & 1;
+            temp >>= 1;
+        }
+
+        for (int j = 0; j < f_count; ++j) {
+            vec_table[i][x_count + f_count * 3 - j - 1] =
+                    vec_table[i][x_count + f_count - j - 1] ^ vec_table[i][x_count + f_count * 2 - j - 1];
+        }
+    }
+
+    vector<int> dense_matrix(lines_count);
+
+    for (auto &line: vec_table) {
+        stringstream ss;
+
+        for (int j = 0; j < x_count; ++j) {
+            ss << line[j];
+        }
+
+        for (int j = x_count + f_count * 2; j < x_count + f_count * 3; ++j) {
+            ss << line[j];
+        }
+
+        dense_matrix[&line - &vec_table[0]] = stoi(ss.str(), nullptr, 2);
     }
 
     vector<int> result_matrix = Multiply_Matrices(dense_matrix, Transpose_Matrix(dense_matrix));
@@ -133,7 +174,7 @@ void Qubit::Get_Matrix(const string &filename) {
         }
     }
 
-    ofstream out("../result_matrix.txt");
+    ofstream out("../result_function_matrix.txt");
     for (int i = 0; i < dense_matrix.size(); ++i) {
         for (int j = 0; j < dense_matrix.size(); ++j) {
             if (dense_matrix[i] == j) {
@@ -170,75 +211,36 @@ vector<int> Qubit::Multiply_Matrices(const std::vector<int> &matrix_1, const std
     return result;
 }
 
-void Qubit::Calculate_Function(int a, int m) {
+string Qubit::Get_Arithmetic_Table(const int &a, const int &m) {
     int f_count = ceil(log2(m));
-    int lines_count = static_cast<int>(pow(pow(2, f_count), 2));
+    int lines_count = static_cast<int>(pow(2, f_count));
 
-    vector<vector<int>> vec(lines_count, vector<int>(f_count * 4));
+    string filename = "../arithmetic_table.txt";
+    ofstream out(filename);
 
     for (int i = 0; i < lines_count; ++i) {
-        int x = (int) ((double) i / pow(2, f_count));
+        vector<int> to_write(f_count * 2);
 
-        int temp = x;
+        int temp = i;
         for (int j = 0; j < f_count; ++j) {
-            vec[i][f_count - j - 1] = temp & 1;
+            to_write[f_count - j - 1] = temp & 1;
             temp >>= 1;
         }
 
-        temp = x * a % m;
+        temp = i * a % m;
         for (int j = 0; j < f_count; ++j) {
-            vec[i][f_count * 2 - j - 1] = temp & 1;
+            to_write[f_count * 2 - j - 1] = temp & 1;
             temp >>= 1;
         }
 
-        temp = i % (int) pow(2, f_count);
-        for (int j = 0; j < f_count; ++j) {
-            vec[i][f_count * 3 - j - 1] = temp & 1;
-            temp >>= 1;
+        for (auto &j: to_write) {
+            out << j << " ";
         }
 
-        for (int j = 0; j < f_count; ++j) {
-            vec[i][f_count * 4 - j - 1] = vec[i][f_count * 2 - j - 1] ^ vec[i][f_count * 3 - j - 1];
-        }
+        out << endl;
     }
 
-    vector<int> dense_matrix(lines_count);
-
-    for (auto &line: vec) {
-        stringstream ss;
-
-        for (int j = 0; j < f_count; ++j) {
-            ss << line[j];
-        }
-
-        for (int j = f_count * 3; j < f_count * 4; ++j) {
-            ss << line[j];
-        }
-
-        dense_matrix[&line - &vec[0]] = stoi(ss.str(), nullptr, 2);
-    }
-
-    vector<int> result_matrix = Multiply_Matrices(dense_matrix, Transpose_Matrix(dense_matrix));
-
-    for (int i = 0; i < result_matrix.size(); ++i) {
-        if (result_matrix[i] != i) {
-            cout << "Matrix is not unitary" << endl;
-            exit(3);
-        }
-    }
-
-    ofstream out("../result_function_matrix.txt");
-    for (int i = 0; i < dense_matrix.size(); ++i) {
-        for (int j = 0; j < dense_matrix.size(); ++j) {
-            if (dense_matrix[i] == j) {
-                out << "1 ";
-            } else {
-                out << "0 ";
-            }
-        }
-        out << "\n";
-    }
     out.close();
 
-    cout << "Matrix was created" << endl;
+    return filename;
 }

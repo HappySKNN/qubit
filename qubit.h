@@ -30,13 +30,19 @@ public:
 
     [[nodiscard]] double Qubit_Observe() const;
 
+    static void Solve_Function(const int &a, const int &m);
+
+    static void Solve_Function(const std::string &filename);
+
     static void Get_Matrix(const std::string &filename);
+
+    static void Calculate_Function(int a, int m);
+
+    static std::string Get_Arithmetic_Table(const int &a, const int &m);
 
     static std::vector<int> Transpose_Matrix(const std::vector<int> &vec);
 
     static std::vector<int> Multiply_Matrices(const std::vector<int> &vec, const std::vector<int> &vec1);
-
-    static void Calculate_Function(int a, int m);
 };
 
 #endif //QUBITS_QUBIT_H

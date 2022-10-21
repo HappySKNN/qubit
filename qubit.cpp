@@ -150,7 +150,7 @@ void Qubit::Get_Matrix(const string &filename) {
 }
 
 vector<int> Qubit::Transpose_Matrix(const std::vector<int> &vec) {
-    vector<int> result(8);
+    vector<int> result(vec.size());
 
     for (int i = 0; i < vec.size(); ++i) {
         result[vec[i]] = i;
@@ -161,11 +161,84 @@ vector<int> Qubit::Transpose_Matrix(const std::vector<int> &vec) {
 
 vector<int> Qubit::Multiply_Matrices(const std::vector<int> &matrix_1, const std::vector<int> &matrix_2) {
 
-    vector<int> result(8);
+    vector<int> result(matrix_1.size());
 
     for (int i = 0; i < matrix_1.size(); ++i) {
         result[i] = matrix_2[matrix_1[i]];
     }
 
     return result;
+}
+
+void Qubit::Calculate_Function(int a, int m) {
+    int f_count = ceil(log2(m));
+    int lines_count = static_cast<int>(pow(pow(2, f_count), 2));
+
+    vector<vector<int>> vec(lines_count, vector<int>(f_count * 4));
+
+    for (int i = 0; i < lines_count; ++i) {
+        int x = (int) ((double) i / pow(2, f_count));
+
+        int temp = x;
+        for (int j = 0; j < f_count; ++j) {
+            vec[i][f_count - j - 1] = temp & 1;
+            temp >>= 1;
+        }
+
+        temp = x * a % m;
+        for (int j = 0; j < f_count; ++j) {
+            vec[i][f_count * 2 - j - 1] = temp & 1;
+            temp >>= 1;
+        }
+
+        temp = i % (int) pow(2, f_count);
+        for (int j = 0; j < f_count; ++j) {
+            vec[i][f_count * 3 - j - 1] = temp & 1;
+            temp >>= 1;
+        }
+
+        for (int j = 0; j < f_count; ++j) {
+            vec[i][f_count * 4 - j - 1] = vec[i][f_count * 2 - j - 1] ^ vec[i][f_count * 3 - j - 1];
+        }
+    }
+
+    vector<int> dense_matrix(lines_count);
+
+    for (auto &line: vec) {
+        stringstream ss;
+
+        for (int j = 0; j < f_count; ++j) {
+            ss << line[j];
+        }
+
+        for (int j = f_count * 3; j < f_count * 4; ++j) {
+            ss << line[j];
+        }
+
+        dense_matrix[&line - &vec[0]] = stoi(ss.str(), nullptr, 2);
+    }
+
+    vector<int> result_matrix = Multiply_Matrices(dense_matrix, Transpose_Matrix(dense_matrix));
+
+    for (int i = 0; i < result_matrix.size(); ++i) {
+        if (result_matrix[i] != i) {
+            cout << "Matrix is not unitary" << endl;
+            exit(3);
+        }
+    }
+
+    ofstream out("../result_function_matrix.txt");
+    for (int i = 0; i < dense_matrix.size(); ++i) {
+        for (int j = 0; j < dense_matrix.size(); ++j) {
+            if (dense_matrix[i] == j) {
+                out << "1 ";
+            } else {
+                out << "0 ";
+            }
+        }
+        out << "\n";
+    }
+    out.close();
+
+    cout << "Matrix was created" << endl;
 }

@@ -52,6 +52,7 @@ void Task_2() {
 int main() {
     //Task_1();
     //Task_2();
-    Qubit::Get_Matrix("../initial_table.txt");
+    //Qubit::Get_Matrix("../initial_table.txt");
+    Qubit::Calculate_Function(3, 5);
     return 0;
 }

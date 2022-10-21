@@ -35,6 +35,8 @@ public:
     static std::vector<int> Transpose_Matrix(const std::vector<int> &vec);
 
     static std::vector<int> Multiply_Matrices(const std::vector<int> &vec, const std::vector<int> &vec1);
+
+    static void Calculate_Function(int a, int m);
 };
 
 #endif //QUBITS_QUBIT_H

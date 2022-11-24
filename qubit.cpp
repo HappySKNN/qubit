@@ -108,10 +108,9 @@ void Qubit::Get_Matrix(const string &filename) {
         vector<int> vec_temp;
         int temp;
 
-        iss >> temp;
         while (!iss.eof()) {
-            vec_temp.push_back(temp);
             iss >> temp;
+            vec_temp.push_back(temp);
         }
 
         vec.push_back(vec_temp);
@@ -227,17 +226,25 @@ string Qubit::Get_Arithmetic_Table(const int &a, const int &m) {
             temp >>= 1;
         }
 
-        temp = i * a % m;
+        temp = ((int) a * i % m);
         for (int j = 0; j < f_count; ++j) {
             to_write[f_count * 2 - j - 1] = temp & 1;
             temp >>= 1;
         }
 
-        for (auto &j: to_write) {
-            out << j << " ";
+        for (int j = 0; j < f_count * 2; ++j) {
+            if (j < f_count * 2 - 1) {
+                out << to_write[j] << " ";
+            } else {
+                out << to_write[j];
+            }
+
         }
 
-        out << endl;
+
+        if (i < lines_count - 1) {
+            out << "\n";
+        }
     }
 
     out.close();

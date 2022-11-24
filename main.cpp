@@ -52,7 +52,7 @@ void Task_2() {
 int main() {
     //Task_1();
     //Task_2();
-    Qubit::Solve_Function(7, 7);
-    //Qubit::Solve_Function("../boolean_table.txt");
+    Qubit::Solve_Function(3, 15);
+    // Qubit::Solve_Function("../boolean_table.txt");
     return 0;
 }

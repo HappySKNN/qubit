@@ -1,4 +1,5 @@
 #include "qubit.h"
+#include <cmath>
 
 using namespace std;
 
@@ -100,21 +101,7 @@ void Qubit::Solve_Function(const std::string &filename) {
 }
 
 void Qubit::Get_Matrix(const string &filename) {
-    ifstream in(filename);
-    vector<vector<int>> vec;
-
-    for (string line; getline(in, line);) {
-        istringstream iss(line);
-        vector<int> vec_temp;
-        int temp;
-
-        while (!iss.eof()) {
-            iss >> temp;
-            vec_temp.push_back(temp);
-        }
-
-        vec.push_back(vec_temp);
-    }
+    vector<vector<int>> vec = Get_Vector_From_Matrix(filename);
 
     int f_count = static_cast<int>((vec[0].size() + 1) / 2);
     int x_count = f_count;
@@ -164,7 +151,7 @@ void Qubit::Get_Matrix(const string &filename) {
         dense_matrix[&line - &vec_table[0]] = stoi(ss.str(), nullptr, 2);
     }
 
-    vector<int> result_matrix = Multiply_Matrices(dense_matrix, Transpose_Matrix(dense_matrix));
+    vector<int> result_matrix = Dense_Matrices_Multiply(dense_matrix, Transpose_Matrix(dense_matrix));
 
     for (int i = 0; i < result_matrix.size(); ++i) {
         if (result_matrix[i] != i) {
@@ -176,13 +163,23 @@ void Qubit::Get_Matrix(const string &filename) {
     ofstream out("../result_function_matrix.txt");
     for (int i = 0; i < dense_matrix.size(); ++i) {
         for (int j = 0; j < dense_matrix.size(); ++j) {
-            if (dense_matrix[i] == j) {
-                out << "1 ";
+            if (j < dense_matrix.size() - 1) {
+                if (dense_matrix[i] == j) {
+                    out << "1 ";
+                } else {
+                    out << "0 ";
+                }
             } else {
-                out << "0 ";
+                if (dense_matrix[i] == j) {
+                    out << "1";
+                } else {
+                    out << "0";
+                }
             }
         }
-        out << "\n";
+        if (i < dense_matrix.size() - 1) {
+            out << endl;
+        }
     }
     out.close();
 
@@ -199,12 +196,26 @@ vector<int> Qubit::Transpose_Matrix(const std::vector<int> &vec) {
     return result;
 }
 
-vector<int> Qubit::Multiply_Matrices(const std::vector<int> &matrix_1, const std::vector<int> &matrix_2) {
+vector<int> Qubit::Dense_Matrices_Multiply(const std::vector<int> &matrix_1, const std::vector<int> &matrix_2) {
 
     vector<int> result(matrix_1.size());
 
     for (int i = 0; i < matrix_1.size(); ++i) {
         result[i] = matrix_2[matrix_1[i]];
+    }
+
+    return result;
+}
+
+vector<vector<int>> Qubit::Multiply_Matrices(vector<vector<int>> matrix_1, vector<vector<int>> matrix_2) {
+    vector<vector<int>> result(matrix_1.size(), vector<int>(matrix_2[0].size()));
+
+    for (int i = 0; i < matrix_1.size(); ++i) {
+        for (int j = 0; j < matrix_2[0].size(); ++j) {
+            for (int k = 0; k < matrix_2.size(); ++k) {
+                result[i][j] += matrix_1[i][k] * matrix_2[k][j];
+            }
+        }
     }
 
     return result;
@@ -250,4 +261,136 @@ string Qubit::Get_Arithmetic_Table(const int &a, const int &m) {
     out.close();
 
     return filename;
+}
+
+void Qubit::Get_Qubit(const string &filename) {
+    Solve_Function(filename);
+    vector<vector<int>> const matrix_vector = Get_Vector_From_Matrix("../result_function_matrix.txt");
+
+    vector<vector<int>> boolean_matrix_vector = Get_Vector_From_Matrix(filename);
+    for (auto &line: boolean_matrix_vector) {
+        line.back() = 0;
+    }
+
+    vector<int> linear_vector(matrix_vector.size(), 0);
+
+    for (auto &line: boolean_matrix_vector) {
+        int temp = 0;
+        for (int i = 0; i < line.size(); ++i) {
+            temp += line[i] * (int) pow(2, line.size() - i - 1);
+        }
+        linear_vector[temp] = 1;
+    }
+
+    vector<vector<int>> matrix_from_linear_vector(linear_vector.size(), vector<int>(linear_vector.size()));
+    matrix_from_linear_vector[0] = linear_vector;
+
+    vector<vector<int>> const result_vector = Multiply_Matrices(matrix_from_linear_vector, matrix_vector);
+
+    cout << "State: 1/2 * (";
+    for (int i = 0; i < result_vector.size(); ++i) {
+        if (result_vector[0][i] == 1) {
+            cout << "|" << Convert_Decimal_To_Binary(i, int(ceil(log(result_vector.size())))) << ">";
+            if (i != result_vector.size() - 1) {
+                cout << " + ";
+            }
+        }
+    }
+    cout << ")" << endl;
+}
+
+void Qubit::Get_Qubit(const vector<int> &boolean_vector) {
+
+}
+
+std::vector<std::vector<int>> Qubit::Get_Vector_From_Matrix(const string &filename) {
+    ifstream in(filename);
+    vector<vector<int>> vec;
+
+    for (string line; getline(in, line);) {
+        istringstream iss(line);
+        int temp;
+        vector<int> vec_temp;
+
+        while (!iss.eof()) {
+            iss >> temp;
+            vec_temp.push_back(temp);
+        }
+
+        vec.push_back(vec_temp);
+    }
+
+    return vec;
+}
+
+string Qubit::Convert_Decimal_To_Binary(const int &number, const int &length) {
+    string result;
+
+    int temp = number;
+    while (temp > 0) {
+        result += to_string(temp & 1);
+        temp >>= 1;
+    }
+
+    while (result.size() < length) {
+        result += "0";
+    }
+
+    for (int i = 0; i < result.size() / 2; ++i) {
+        swap(result[i], result[result.size() - i - 1]);
+    }
+
+    return result;
+}
+
+std::vector<std::vector<int>>
+Qubit::Tensor_Multiply(const vector<std::vector<int>> &matrix_1, const vector<std::vector<int>> &matrix_2) {
+    vector<vector<int>> result(matrix_1.size() * matrix_2.size(), vector<int>(matrix_1[0].size() * matrix_2[0].size()));
+
+    for (int i = 0; i < matrix_1.size(); ++i) {
+        for (int j = 0; j < matrix_1[0].size(); ++j) {
+            for (int k = 0; k < matrix_2.size(); ++k) {
+                for (int l = 0; l < matrix_2[0].size(); ++l) {
+                    result[i * matrix_2.size() + k][j * matrix_2[0].size() + l] = matrix_1[i][j] * matrix_2[k][l];
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+void Qubit::Deutsch_Jozsa_Algorithm(const string &filename) {
+    Solve_Function(filename);
+    vector<vector<int>> const matrix_vector = Get_Vector_From_Matrix("../result_function_matrix.txt");
+
+    //vector<vector<int>> boolean_matrix_vector = Get_Vector_From_Matrix(filename);
+
+    vector<vector<int>> Hadamard_Matrix = {{1, 1},
+                                           {1, -1}};
+
+    vector<vector<int>> multiply_hadamard_matrix = Tensor_Multiply(Hadamard_Matrix, Hadamard_Matrix);
+
+    multiply_hadamard_matrix = Tensor_Multiply(multiply_hadamard_matrix, Hadamard_Matrix);
+
+    vector<vector<int>> vec(matrix_vector.size(), vector<int>(matrix_vector.size(), 1));
+    for (int i = 0; i < vec.size(); ++i) {
+        if (i % 2)
+            vec[0][i] *= -1;
+    }
+
+    vector<vector<int>> result_vector = Multiply_Matrices(vec, matrix_vector);
+
+    result_vector = Multiply_Matrices(result_vector, multiply_hadamard_matrix);
+
+    cout << "State: (";
+    for (int i = 0; i < result_vector.size(); ++i) {
+        if (result_vector[0][i] != 0) {
+            cout << "|" << Convert_Decimal_To_Binary(i, int(ceil(log(result_vector.size())))) << ">";
+            if (i != result_vector.size() - 1) {
+                cout << " + ";
+            }
+        }
+    }
+    cout << ")" << endl;
 }

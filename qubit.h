@@ -36,13 +36,27 @@ public:
 
     static void Get_Matrix(const std::string &filename);
 
-    static void Calculate_Function(int a, int m);
-
     static std::string Get_Arithmetic_Table(const int &a, const int &m);
 
     static std::vector<int> Transpose_Matrix(const std::vector<int> &vec);
 
-    static std::vector<int> Multiply_Matrices(const std::vector<int> &vec, const std::vector<int> &vec1);
+    static std::vector<int> Dense_Matrices_Multiply(const std::vector<int> &matrix_1, const std::vector<int> &matrix_2);
+
+    static std::vector<std::vector<int>>
+    Multiply_Matrices(std::vector<std::vector<int>> matrix_1, std::vector<std::vector<int>> matrix_2);
+
+    static void Get_Qubit(const std::string &filename);
+
+    static void Get_Qubit(const std::vector<int> &boolean_vector);
+
+    static std::vector<std::vector<int>> Get_Vector_From_Matrix(const std::string &filename);
+
+    static std::string Convert_Decimal_To_Binary(const int &number, const int &length);
+
+    static std::vector<std::vector<int>> Tensor_Multiply(const std::vector<std::vector<int>> &matrix_1,
+                                                         const std::vector<std::vector<int>> &matrix_2);
+
+    static void Deutsch_Jozsa_Algorithm(const std::string &filename);
 };
 
 #endif //QUBITS_QUBIT_H

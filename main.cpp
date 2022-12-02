@@ -52,7 +52,9 @@ void Task_2() {
 int main() {
     //Task_1();
     //Task_2();
-    Qubit::Solve_Function(3, 15);
+    //Qubit::Solve_Function(3, 15);
     // Qubit::Solve_Function("../boolean_table.txt");
+    //Qubit::Get_Qubit("../boolean_table.txt");
+    Qubit::Deutsch_Jozsa_Algorithm("../boolean_table.txt");
     return 0;
 }
